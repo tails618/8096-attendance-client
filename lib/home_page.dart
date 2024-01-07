@@ -100,7 +100,6 @@ class HomePageState extends State<HomePage> {
         userState = snapshot.child('state').value.toString();
         counter = snapshot.child('counter').value as int;
         if (userState == 'in') {
-          print(userState);
           latestTimeIn = snapshot
               .child('sessions')
               .child(counter.toString())
