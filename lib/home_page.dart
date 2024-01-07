@@ -18,6 +18,7 @@ class HomePageState extends State<HomePage> {
   int latestTimeOut = 0;
   int totalTimeMilliseconds = 0;
   String totalTime = '';
+  int totalSessions = 0;
 
   final textController = TextEditingController();
 
@@ -50,6 +51,7 @@ class HomePageState extends State<HomePage> {
               Text('Email: ${auth.currentUser?.email}'),
               Text('Name: ${auth.currentUser?.displayName}'),
               Text('Total time: $totalTime'),
+              Text('Total sessions: $totalSessions'),
               Text('Current state: $userState'),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -84,6 +86,7 @@ class HomePageState extends State<HomePage> {
     setUserVal('/state', 'out');
     setUserVal('/counter', 0);
     setUserVal('/admin', false);
+    setUserVal('/totalSessions', 0);
   }
 
   void reload() async {
@@ -93,6 +96,7 @@ class HomePageState extends State<HomePage> {
     } else {
       setState(() {
         totalTimeMilliseconds = snapshot.child('totalTime').value as int;
+        totalSessions = snapshot.child('totalSessions').value as int;
         Duration totalTimeDuration =
             Duration(milliseconds: totalTimeMilliseconds);
         totalTime =
@@ -194,10 +198,27 @@ class HomePageState extends State<HomePage> {
         duration: Duration(milliseconds: 500),
       ),
     );
+
     latestTimeOut = DateTime.now().millisecondsSinceEpoch;
+
     setUserVal('/state', 'out');
     setUserVal('/sessions/$counter/timeOut', latestTimeOut);
-    int newTotalTime = totalTimeMilliseconds + (latestTimeOut - latestTimeIn);
+
+    int duration = latestTimeOut - latestTimeIn;
+    int newTotalTime = totalTimeMilliseconds + duration;
+
+    int newSessions = 0;
+
+    if (duration >= Duration(hours: 6, minutes: 30).inMilliseconds){
+      newSessions = 2;
+    } else if (duration >= Duration(hours: 2, minutes: 30).inMilliseconds){
+      newSessions = 1;
+    }
+
+    setUserVal('/sessions/$counter/sessions', newSessions);
+
+    setUserVal('/totalSessions', totalSessions + newSessions);
+
     setUserVal('/totalTime', newTotalTime);
     setUserVal('/counter', counter + 1);
   }
