@@ -209,9 +209,9 @@ class HomePageState extends State<HomePage> {
 
     int newSessions = 0;
 
-    if (duration >= Duration(hours: 6, minutes: 30).inMilliseconds){
+    if (duration >= const Duration(hours: 6, minutes: 30).inMilliseconds){
       newSessions = 2;
-    } else if (duration >= Duration(hours: 2, minutes: 30).inMilliseconds){
+    } else if (duration >= const Duration(hours: 2, minutes: 30).inMilliseconds){
       newSessions = 1;
     }
 
