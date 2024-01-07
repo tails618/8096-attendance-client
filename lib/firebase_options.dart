@@ -21,9 +21,15 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return android;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for android - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -51,28 +57,9 @@ class DefaultFirebaseOptions {
     appId: '1:85529781587:web:c405ceb62f3a7719d0ada6',
     messagingSenderId: '85529781587',
     projectId: 'attendance-test-cc32a',
-    authDomain: 'attendance-test-cc32a.web.app',
+    authDomain: 'attendance-test-cc32a.web.app', //this MUST be equal to the domain users visit, if accessing remotely
     databaseURL: 'https://attendance-test-cc32a-default-rtdb.firebaseio.com',
     storageBucket: 'attendance-test-cc32a.appspot.com',
     measurementId: 'G-S8D23ZK0X7',
-  );
-
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBeHhZT3Fl2DgQ5yU2AuCQ1U_rbXui1vUc',
-    appId: '1:85529781587:android:e9f4610c2030e739d0ada6',
-    messagingSenderId: '85529781587',
-    projectId: 'attendance-test-cc32a',
-    databaseURL: 'https://attendance-test-cc32a-default-rtdb.firebaseio.com',
-    storageBucket: 'attendance-test-cc32a.appspot.com',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDO8VbSq6zZRiwDQArOH6x0Zao6jluUG2Q',
-    appId: '1:85529781587:ios:8c95eb241f25a37ad0ada6',
-    messagingSenderId: '85529781587',
-    projectId: 'attendance-test-cc32a',
-    databaseURL: 'https://attendance-test-cc32a-default-rtdb.firebaseio.com',
-    storageBucket: 'attendance-test-cc32a.appspot.com',
-    iosBundleId: 'com.cachemoney.attendance.cacheMoneyAttendance',
   );
 }
