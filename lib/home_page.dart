@@ -32,9 +32,17 @@ class HomePageState extends State<HomePage> {
         children: <Widget>[
           Visibility(
             visible: auth.currentUser != null,
-            replacement: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SignInButton(context: context)),
+            replacement: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text('Note: Sign-in works via pop-up, which is not supported '
+                      'on all browsers. If you are having trouble signing in, '
+                      'try enabling pop-ups or using a different browser.'),
+                ),
+               SignInButton(context: context),
+              ],
+            ),
             child: Column(children: <Widget>[
               Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -54,6 +62,7 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  @override
   void initState() {
     super.initState();
     auth.authStateChanges().listen((User? newUser) {
