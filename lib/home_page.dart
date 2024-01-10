@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cache_money_attendance/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -18,7 +20,10 @@ class HomePageState extends State<HomePage> {
   int latestTimeOut = 0;
   int totalTimeMilliseconds = 0;
   String totalTime = '';
+  int liveTotalTimeMilliseconds = 0;
   int totalSessions = 0;
+
+  Timer? timer;
 
   final textController = TextEditingController();
 
@@ -37,11 +42,12 @@ class HomePageState extends State<HomePage> {
               children: [
                 const Padding(
                   padding: EdgeInsets.all(20.0),
-                  child: Text('Note: Sign-in works via pop-up, which is not supported '
+                  child: Text(
+                      'Note: Sign-in works via pop-up, which is not supported '
                       'on all browsers. If you are having trouble signing in, '
                       'try enabling pop-ups or using a different browser.'),
                 ),
-               SignInButton(context: context),
+                SignInButton(context: context),
               ],
             ),
             child: Column(children: <Widget>[
@@ -72,6 +78,28 @@ class HomePageState extends State<HomePage> {
         configUser();
       }
     });
+    Timer timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {
+        if (userState == 'in') {
+          liveTotalTimeMilliseconds = DateTime.now().millisecondsSinceEpoch -
+              latestTimeIn +
+              totalTimeMilliseconds;
+          Duration liveTotalTimeDuration =
+              Duration(milliseconds: liveTotalTimeMilliseconds);
+          totalTime =
+              '${liveTotalTimeDuration.inHours}:${liveTotalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${liveTotalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+        } else {
+          totalTime =
+              '${Duration(milliseconds: totalTimeMilliseconds).inHours}:${Duration(milliseconds: totalTimeMilliseconds).inMinutes.remainder(60).toString().padLeft(2, '0')}:${Duration(milliseconds: totalTimeMilliseconds).inSeconds.remainder(60).toString().padLeft(2, '0')}';
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer?.cancel();
   }
 
   void configUser() {
@@ -87,6 +115,8 @@ class HomePageState extends State<HomePage> {
     setUserVal('/counter', 0);
     setUserVal('/admin', false);
     setUserVal('/totalSessions', 0);
+    setUserVal('/name', auth.currentUser?.displayName as Object);
+    setUserVal('/email', auth.currentUser?.email as Object);
   }
 
   void reload() async {
@@ -209,9 +239,10 @@ class HomePageState extends State<HomePage> {
 
     int newSessions = 0;
 
-    if (duration >= const Duration(hours: 6, minutes: 30).inMilliseconds){
+    if (duration >= const Duration(hours: 6, minutes: 30).inMilliseconds) {
       newSessions = 2;
-    } else if (duration >= const Duration(hours: 2, minutes: 30).inMilliseconds){
+    } else if (duration >=
+        const Duration(hours: 2, minutes: 30).inMilliseconds) {
       newSessions = 1;
     }
 

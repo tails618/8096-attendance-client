@@ -44,12 +44,26 @@ class SignInButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {
         Auth().signInWithGoogle();
-        // FirebaseAuth.instance.authStateChanges().listen((User? user) {
-        // });
+        // FirebaseAuth.instance.authStateChanges().listen((User? user) {});
       },
       child: const Text('Sign In'),
     );
   }
+
+  // void isAdmin() {
+  //   if (Auth().firebaseAuth.currentUser != null) {
+  //     DatabaseReference ref = FirebaseDatabase.instance.ref();
+  //     ref.child(Auth().firebaseAuth.currentUser!.uid).once().then((DataSnapshot snapshot) {
+  //       if (snapshot.value?['admin'] == true) {
+  //         return true;
+  //       } else {
+  //         return false;
+  //       }
+  //     });
+  //   } else {
+  //     return false;
+  //   }
+  // }
 }
 
 class SignOutButton extends StatelessWidget {
