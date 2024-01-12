@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "client",
     "source": ".",
     "ignore": [
       "firebase.json",
@@ -9,5 +10,8 @@
     "frameworksBackend": {
       "region": "us-central1"
     }
+  },
+  "database": {
+    "rules": "database.rules.json"
   }
 }

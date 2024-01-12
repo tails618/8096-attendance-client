@@ -27,3 +27,7 @@ doc/api/
 .flutter-plugins-dependencies
 
 .firebase/
+
+venv/
+
+**/.DS_Store
