@@ -77,6 +77,7 @@ class HomePageState extends State<HomePage> {
     auth.authStateChanges().listen((User? newUser) {
       if (newUser != null) {
         configUser();
+        reload();
       }
     });
     Timer timer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -112,7 +113,7 @@ class HomePageState extends State<HomePage> {
   void configUser() {
     user = auth.currentUser?.uid;
     if (user != null && user != '') {
-      reload();
+      fetchData();
     }
   }
 
@@ -126,7 +127,7 @@ class HomePageState extends State<HomePage> {
     setUserVal('/email', auth.currentUser?.email as Object);
   }
 
-  void reload() async {
+  void fetchData() async {
     DataSnapshot snapshot = await ref.child(user!).get();
     if (snapshot.value == null) {
       newUser();
@@ -149,6 +150,34 @@ class HomePageState extends State<HomePage> {
         }
       });
     }
+  }
+
+  void reload() {
+    ref.child('$user/state').onValue.listen((event) async {
+      // Fetch the entire user data when a change is detected in user/state
+      DataSnapshot snapshot = await ref.child(user!).get();
+      if (snapshot.value == null) {
+        newUser();
+      } else {
+        setState(() {
+          totalTimeMilliseconds = snapshot.child('totalTime').value as int;
+          totalSessions = snapshot.child('totalSessions').value as int;
+          Duration totalTimeDuration =
+              Duration(milliseconds: totalTimeMilliseconds);
+          totalTime =
+              '${totalTimeDuration.inHours}:${totalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${totalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+          userState = snapshot.child('state').value.toString();
+          counter = snapshot.child('counter').value as int;
+          if (userState == 'in') {
+            latestTimeIn = snapshot
+                .child('sessions')
+                .child(counter.toString())
+                .child('timeIn')
+                .value as int;
+          }
+        });
+      }
+    });
   }
 
   showNewUserAlertDialog(BuildContext context) {
@@ -186,7 +215,7 @@ class HomePageState extends State<HomePage> {
     ref
         .child('$user$child')
         .set(val)
-        .then((result) => {reload()})
+        .then((result) => {fetchData()})
         .catchError((e) => {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(e)),
