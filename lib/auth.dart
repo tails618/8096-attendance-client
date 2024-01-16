@@ -46,7 +46,7 @@ class SignInButton extends StatelessWidget {
         Auth().signInWithGoogle();
         // FirebaseAuth.instance.authStateChanges().listen((User? user) {});
       },
-      child: const Text('Sign In'),
+      child: const Text('Sign in to account'),
     );
   }
 
@@ -77,11 +77,31 @@ class SignOutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
-        Auth().signOut();
-        html.window.location.reload();
-      },
-      child: const Text('Sign Out'),
+      // onPressed: () {
+      //   Auth().signOut();
+      //   html.window.location.reload();
+      // },
+      onPressed: () => showDialog<String>(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Note'),
+          content: const Text('This will sign you out of your Google account. It will NOT stop the clock. If you want to stop the clock, press the "stop time" button.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Auth().signOut();
+                html.window.location.reload();
+              },
+              child: const Text('Sign out'),
+            ),
+          ],
+        ),
+      ),
+      child: const Text('Sign out of account'),
     );
   }
 }

@@ -20,7 +20,7 @@ class HomePageState extends State<HomePage> {
   int latestTimeOut = 0;
   int totalTimeMilliseconds = 0;
   String totalTime = '';
-  int liveTotalTimeMilliseconds = 0;
+  String sessionTime = '';
   int totalSessions = 0;
 
   Timer? timer;
@@ -51,18 +51,19 @@ class HomePageState extends State<HomePage> {
               ],
             ),
             child: Column(children: <Widget>[
-              Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SignOutButton(context: context)),
               Text('Email: ${auth.currentUser?.email}'),
               Text('Name: ${auth.currentUser?.displayName}'),
               Text('Total time: $totalTime'),
+              Text('Session time: $sessionTime'),
               Text('Total sessions: $totalSessions'),
               Text('Current state: $userState'),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: toggleButton(context),
               ),
+              Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SignOutButton(context: context)),
             ]),
           ),
         ],
@@ -81,16 +82,22 @@ class HomePageState extends State<HomePage> {
     Timer timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         if (userState == 'in') {
-          liveTotalTimeMilliseconds = DateTime.now().millisecondsSinceEpoch -
-              latestTimeIn +
-              totalTimeMilliseconds;
+          int liveSessionTimeMilliseconds =
+              DateTime.now().millisecondsSinceEpoch - latestTimeIn;
+          int liveTotalTimeMilliseconds =
+              liveSessionTimeMilliseconds + totalTimeMilliseconds;
+          Duration liveSessionTimeDuration =
+              Duration(milliseconds: liveSessionTimeMilliseconds);
           Duration liveTotalTimeDuration =
               Duration(milliseconds: liveTotalTimeMilliseconds);
           totalTime =
               '${liveTotalTimeDuration.inHours}:${liveTotalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${liveTotalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+          sessionTime =
+              '${liveSessionTimeDuration.inHours}:${liveSessionTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${liveSessionTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
         } else {
           totalTime =
               '${Duration(milliseconds: totalTimeMilliseconds).inHours}:${Duration(milliseconds: totalTimeMilliseconds).inMinutes.remainder(60).toString().padLeft(2, '0')}:${Duration(milliseconds: totalTimeMilliseconds).inSeconds.remainder(60).toString().padLeft(2, '0')}';
+          sessionTime = '0:00:00';
         }
       });
     });
@@ -205,7 +212,7 @@ class HomePageState extends State<HomePage> {
           }
         }
       },
-      child: Text(userState == 'in' ? 'Check out' : 'Check in'),
+      child: Text(userState == 'in' ? 'Stop time' : 'Start time'),
     );
   }
 
