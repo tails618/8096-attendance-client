@@ -3,6 +3,7 @@
 # Deploy with `firebase deploy`
 
 # The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
+import time
 from firebase_functions import scheduler_fn, db_fn, https_fn, options
 
 # The Firebase Admin SDK to access the Firebase Realtime Database.
@@ -35,21 +36,23 @@ def nightSignOut(event: scheduler_fn.ScheduledEvent) -> None:
 
 @https_fn.on_call()
 def manualSignOut(req: https_fn.CallableRequest) -> Any:
-    print(req.auth.uid)
     check_out(req.auth.uid)
 
-# @https_fn.on_call()
-
+@https_fn.on_call()
+def uidSignOut(req: https_fn.CallableRequest) -> Any:
+    check_out(req.data['uid'])
 
 def check_out(user_id):
-    print('checking out')
-    latest_time_out = int(datetime.datetime.now().timestamp() * 1000)
     counter = db.reference(f'{user_id}/counter').get()
+
+    latest_time_out = int(datetime.datetime.now().timestamp() * 1000)
     latest_time_in = db.reference(f'{user_id}/sessions/{counter}/timeIn').get()
+
+
     total_time_milliseconds = db.reference(f'{user_id}/totalTime').get()
+
     total_sessions = db.reference(f'{user_id}/totalSessions').get()
 
-    set_user_val(f'{user_id}/state', 'out')
     set_user_val(f'{user_id}/sessions/{counter}/timeOut', latest_time_out)
 
     duration = latest_time_out - latest_time_in
@@ -68,6 +71,7 @@ def check_out(user_id):
 
     set_user_val(f'{user_id}/totalTime', new_total_time)
     set_user_val(f'{user_id}/counter', counter + 1)
+    set_user_val(f'{user_id}/state', 'out')
 
 def set_user_val(path, value):
     ref = db.reference(path)

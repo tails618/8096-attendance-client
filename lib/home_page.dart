@@ -238,7 +238,8 @@ class HomePageState extends State<HomePage> {
         } else {
           if (userState == 'in') {
             // checkOut();
-            await FirebaseFunctions.instance.httpsCallable('manualSignOut').call({}).then((value) => fetchData());
+            await FirebaseFunctions.instance.httpsCallable('manualSignOut').call().then((value) => fetchData());
+            // print(FirebaseFunctions.instance.httpsCallable('manualSignOut').call({}).toString());
           } else {
             checkIn();
           }
@@ -256,8 +257,8 @@ class HomePageState extends State<HomePage> {
       ),
     );
     latestTimeIn = DateTime.now().millisecondsSinceEpoch;
-    setUserVal('/state', 'in');
     setUserVal('/sessions/$counter/timeIn', latestTimeIn);
+    setUserVal('/state', 'in');
   }
 
   void checkOut() {
