@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cache_money_attendance/auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -141,6 +142,7 @@ class HomePageState extends State<HomePage> {
             '${totalTimeDuration.inHours}:${totalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${totalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
         userState = snapshot.child('state').value.toString();
         counter = snapshot.child('counter').value as int;
+        print(counter);
         if (userState == 'in') {
           latestTimeIn = snapshot
               .child('sessions')
@@ -225,7 +227,7 @@ class HomePageState extends State<HomePage> {
 
   ElevatedButton toggleButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
+      onPressed: () async {
         if (userState == '') {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -235,7 +237,9 @@ class HomePageState extends State<HomePage> {
           );
         } else {
           if (userState == 'in') {
-            checkOut();
+            // checkOut();
+            await FirebaseFunctions.instance.httpsCallable('manualSignOut').call().then((value) => fetchData());
+            // print(FirebaseFunctions.instance.httpsCallable('manualSignOut').call({}).toString());
           } else {
             checkIn();
           }
@@ -253,8 +257,8 @@ class HomePageState extends State<HomePage> {
       ),
     );
     latestTimeIn = DateTime.now().millisecondsSinceEpoch;
-    setUserVal('/state', 'in');
     setUserVal('/sessions/$counter/timeIn', latestTimeIn);
+    setUserVal('/state', 'in');
   }
 
   void checkOut() {
@@ -267,7 +271,6 @@ class HomePageState extends State<HomePage> {
 
     latestTimeOut = DateTime.now().millisecondsSinceEpoch;
 
-    setUserVal('/state', 'out');
     setUserVal('/sessions/$counter/timeOut', latestTimeOut);
 
     int duration = latestTimeOut - latestTimeIn;
@@ -287,6 +290,7 @@ class HomePageState extends State<HomePage> {
     setUserVal('/totalSessions', totalSessions + newSessions);
 
     setUserVal('/totalTime', newTotalTime);
+    setUserVal('/state', 'out');
     setUserVal('/counter', counter + 1);
   }
 }
