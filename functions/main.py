@@ -67,6 +67,8 @@ def check_out(user_id):
 
     set_user_val(f'{user_id}/sessions/{counter}/sessions', new_sessions)
 
+    set_user_val(f'{user_id}/sessions/{counter}/cancelled', False)
+
     set_user_val(f'{user_id}/totalSessions', total_sessions + new_sessions)
 
     set_user_val(f'{user_id}/totalTime', new_total_time)
@@ -75,7 +77,16 @@ def check_out(user_id):
 
 def check_out_cancelled(user_id):
     counter = db.reference(f'{user_id}/counter').get()
-    db.reference(f'{user_id}/sessions/{counter}').delete()
+
+    latest_time_out = int(datetime.datetime.now().timestamp() * 1000)
+
+    set_user_val(f'{user_id}/sessions/{counter}/timeOut', latest_time_out)
+
+    set_user_val(f'{user_id}/sessions/{counter}/sessions', 0)
+
+    set_user_val(f'{user_id}/sessions/{counter}/cancelled', True)
+
+    set_user_val(f'{user_id}/counter', counter + 1)
     set_user_val(f'{user_id}/state', 'out')
 
 def set_user_val(path, value):
