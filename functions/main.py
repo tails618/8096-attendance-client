@@ -25,7 +25,7 @@ def nightSignOut(event: scheduler_fn.ScheduledEvent) -> None:
     for uid in root:
         state = db.reference(f"/{uid}/state").get()
         if state == "in":
-            check_out(uid)
+            check_out_cancelled(uid)
     
     db.reference('pause').child('paused').set(False)
     db.reference('pause').child('counter').set(0)
@@ -71,6 +71,11 @@ def check_out(user_id):
 
     set_user_val(f'{user_id}/totalTime', new_total_time)
     set_user_val(f'{user_id}/counter', counter + 1)
+    set_user_val(f'{user_id}/state', 'out')
+
+def check_out_cancelled(user_id):
+    counter = db.reference(f'{user_id}/counter').get()
+    db.reference(f'{user_id}/sessions/{counter}').delete()
     set_user_val(f'{user_id}/state', 'out')
 
 def set_user_val(path, value):
