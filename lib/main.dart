@@ -13,10 +13,10 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// This sets up that it's a MaterialApp and initializes the theming. It is the root of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,26 +26,28 @@ class MyApp extends StatelessWidget {
             seedColor: const Color(0xff16543c), brightness: Brightness.light),
         useMaterial3: true,
       ),
+      // hell yeah we got dark mode
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xff16543c), brightness: Brightness.dark),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Home'),
+      home: const UIStructure(title: 'Home'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+/// This widget sets up the structure of the UI, including the app bar (using the theming created above) and initializes the HomePage widget.
+class UIStructure extends StatefulWidget {
+  const UIStructure({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<UIStructure> createState() => _UIStructureState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _UIStructureState extends State<UIStructure> {
   DatabaseReference ref = FirebaseDatabase.instance.ref();
 
   @override
@@ -59,17 +61,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // note: this code isn't currently used but could be useful sometime in the future.
+  // This code isn't currently used but could be useful sometime in the future for getting data from the database.
   Future<DataSnapshot> getDbEvent(String child) async {
     return await ref.child('').get();
-  }
-
-  void snackbar(String text, int milliseconds) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        duration: Duration(milliseconds: milliseconds),
-      ),
-    );
   }
 }

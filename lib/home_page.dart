@@ -31,6 +31,7 @@ class HomePageState extends State<HomePage> {
   DatabaseReference ref = FirebaseDatabase.instance.ref();
   var auth = Auth().firebaseAuth;
 
+  // The build method is called every time the widget is updated, so be careful with what logic goes here. Generally, UI elements should go here and logic should go in initState or in button presses.
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -39,18 +40,19 @@ class HomePageState extends State<HomePage> {
         children: <Widget>[
           Visibility(
             visible: auth.currentUser != null,
+            // If the user is not signed in (the above condition is false - i.e. the user is null), show the replacement widget (the sign-in button and note about pop-ups)
             replacement: Column(
               children: [
                 const Padding(
                   padding: EdgeInsets.all(20.0),
-                  child: Text(
-                      'Note: Sign-in works via pop-up, which is not supported '
+                  child: Text('Note: Sign-in works via pop-up, which is not supported '
                       'on all browsers. If you are having trouble signing in, '
                       'try enabling pop-ups or using a different browser.'),
                 ),
                 SignInButton(context: context),
               ],
             ),
+            // If the user is signed in, show the user data and the sign-out and time buttons
             child: Column(children: <Widget>[
               Text('Email: ${auth.currentUser?.email}'),
               Text('Name: ${auth.currentUser?.displayName}'),
@@ -62,9 +64,7 @@ class HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.all(8.0),
                 child: toggleButton(context),
               ),
-              Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SignOutButton(context: context)),
+              Padding(padding: const EdgeInsets.all(8.0), child: SignOutButton(context: context)),
             ]),
           ),
         ],
@@ -72,26 +72,29 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  // initState is called when the widget is first created so it's where logic than should run at load time should go
   @override
   void initState() {
     super.initState();
+
+    // Listen for changes in the user's authentication state (i.e. they sign in or out)
     auth.authStateChanges().listen((User? newUser) {
       if (newUser != null) {
         configUser();
         reload();
       }
     });
+
+    /// This timer is used to update the time every second. There is a warning because we never actually refer back to the timer but you can safely ignore it.
+    /// Essentially what it does is calculate the time the user has been checked in and the total time, once per second, to display on the home page.
+    /// Note that the calculations here are NOT actually used to write to the database on check-out. That's in the cloud function!
     Timer timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         if (userState == 'in') {
-          int liveSessionTimeMilliseconds =
-              DateTime.now().millisecondsSinceEpoch - latestTimeIn;
-          int liveTotalTimeMilliseconds =
-              liveSessionTimeMilliseconds + totalTimeMilliseconds;
-          Duration liveSessionTimeDuration =
-              Duration(milliseconds: liveSessionTimeMilliseconds);
-          Duration liveTotalTimeDuration =
-              Duration(milliseconds: liveTotalTimeMilliseconds);
+          int liveSessionTimeMilliseconds = DateTime.now().millisecondsSinceEpoch - latestTimeIn;
+          int liveTotalTimeMilliseconds = liveSessionTimeMilliseconds + totalTimeMilliseconds;
+          Duration liveSessionTimeDuration = Duration(milliseconds: liveSessionTimeMilliseconds);
+          Duration liveTotalTimeDuration = Duration(milliseconds: liveTotalTimeMilliseconds);
           totalTime =
               '${liveTotalTimeDuration.inHours}:${liveTotalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${liveTotalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
           sessionTime =
@@ -111,6 +114,7 @@ class HomePageState extends State<HomePage> {
     timer?.cancel();
   }
 
+  /// Gets the current user (potentially null), and if the user is not null, fetches the user's data from the database
   void configUser() {
     user = auth.currentUser?.uid;
     if (user != null && user != '') {
@@ -118,6 +122,7 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  /// This function is called when a user signs in for the first time (i.e. does not exist in the database). It sets the user's data to the default values.
   void newUser() {
     setUserVal('/totalTime', 0);
     setUserVal('/state', 'out');
@@ -128,66 +133,43 @@ class HomePageState extends State<HomePage> {
     setUserVal('/email', auth.currentUser?.email as Object);
   }
 
+  /// Fetches the user's data from the database and sets the local (widget state) variables to the fetched database values.
   void fetchData() async {
     DataSnapshot snapshot = await ref.child(user!).get();
+
     if (snapshot.value == null) {
       newUser();
     } else {
       setState(() {
         totalTimeMilliseconds = snapshot.child('totalTime').value as int;
         totalSessions = snapshot.child('totalSessions').value as int;
-        Duration totalTimeDuration =
-            Duration(milliseconds: totalTimeMilliseconds);
+        Duration totalTimeDuration = Duration(milliseconds: totalTimeMilliseconds);
+        // This is just formatting the time to be in the format HH:MM:SS
         totalTime =
             '${totalTimeDuration.inHours}:${totalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${totalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
         userState = snapshot.child('state').value.toString();
         counter = snapshot.child('counter').value as int;
-        print(counter);
         if (userState == 'in') {
-          latestTimeIn = snapshot
-              .child('sessions')
-              .child(counter.toString())
-              .child('timeIn')
-              .value as int;
+          latestTimeIn = snapshot.child('sessions').child(counter.toString()).child('timeIn').value as int;
         }
       });
     }
   }
 
+  /// Refreshes the user's data from the database. This is called when a change is detected in the user's state (i.e. they start or stop the time).
   void reload() {
     ref.child('$user/state').onValue.listen((event) async {
-      // Fetch the entire user data when a change is detected in user/state
-      DataSnapshot snapshot = await ref.child(user!).get();
-      if (snapshot.value == null) {
-        newUser();
-      } else {
-        setState(() {
-          totalTimeMilliseconds = snapshot.child('totalTime').value as int;
-          totalSessions = snapshot.child('totalSessions').value as int;
-          Duration totalTimeDuration =
-              Duration(milliseconds: totalTimeMilliseconds);
-          totalTime =
-              '${totalTimeDuration.inHours}:${totalTimeDuration.inMinutes.remainder(60).toString().padLeft(2, '0')}:${totalTimeDuration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
-          userState = snapshot.child('state').value.toString();
-          counter = snapshot.child('counter').value as int;
-          if (userState == 'in') {
-            latestTimeIn = snapshot
-                .child('sessions')
-                .child(counter.toString())
-                .child('timeIn')
-                .value as int;
-          }
-        });
-      }
+      fetchData();
     });
   }
 
+  /// This just exists to avoid duplicate users, since most people will have a school and personal Google account.
+  /// TODO: Maybe just limit it to Lab accounts (with hardcoded exceptions for mentors?) 
   showNewUserAlertDialog(BuildContext context) {
     AlertDialog confirmNewUserDialog() {
       return AlertDialog(
         title: const Text('Confirm New User?'),
-        content: Text(
-            'The user $user does not exist in the database; are you sure you want to create a new user?'),
+        content: Text('The user $user does not exist in the database; are you sure you want to create a new user?'),
         actions: [
           TextButton(
               onPressed: () {
@@ -204,7 +186,6 @@ class HomePageState extends State<HomePage> {
       );
     }
 
-    // show the dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -213,18 +194,16 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  void setUserVal(String child, Object val) {
-    ref
-        .child('$user$child')
-        .set(val)
-        .then((result) => {fetchData()})
-        .catchError((e) => {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(e)),
-              )
-            });
+  /// Helper function to set a value in the database as a child of the current user.
+  void setUserVal(String key, Object val) {
+    ref.child('$user$key').set(val).then((result) => {fetchData()}).catchError((e) => {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e)),
+          )
+        });
   }
 
+  /// This is the button that toggles the user's state (i.e. starts or stops the time).
   ElevatedButton toggleButton(BuildContext context) {
     return ElevatedButton(
       onPressed: () async {
@@ -237,9 +216,7 @@ class HomePageState extends State<HomePage> {
           );
         } else {
           if (userState == 'in') {
-            // checkOut();
-            await FirebaseFunctions.instance.httpsCallable('manualSignOut').call().then((value) => fetchData());
-            // print(FirebaseFunctions.instance.httpsCallable('manualSignOut').call({}).toString());
+            checkOut();
           } else {
             checkIn();
           }
@@ -249,6 +226,7 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  /// There's very little we actually need to do here; just store the current time and set the state. All calculations are handled on check out.
   void checkIn() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -261,7 +239,7 @@ class HomePageState extends State<HomePage> {
     setUserVal('/state', 'in');
   }
 
-  void checkOut() {
+  void checkOut() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Checked out'),
@@ -269,28 +247,7 @@ class HomePageState extends State<HomePage> {
       ),
     );
 
-    latestTimeOut = DateTime.now().millisecondsSinceEpoch;
-
-    setUserVal('/sessions/$counter/timeOut', latestTimeOut);
-
-    int duration = latestTimeOut - latestTimeIn;
-    int newTotalTime = totalTimeMilliseconds + duration;
-
-    int newSessions = 0;
-
-    if (duration >= const Duration(hours: 6, minutes: 30).inMilliseconds) {
-      newSessions = 2;
-    } else if (duration >=
-        const Duration(hours: 2, minutes: 30).inMilliseconds) {
-      newSessions = 1;
-    }
-
-    setUserVal('/sessions/$counter/sessions', newSessions);
-
-    setUserVal('/totalSessions', totalSessions + newSessions);
-
-    setUserVal('/totalTime', newTotalTime);
-    setUserVal('/state', 'out');
-    setUserVal('/counter', counter + 1);
+    // We use a cloud function here so that it can be called automatically if the user forgets to check out.
+    await FirebaseFunctions.instance.httpsCallable('manualSignOut').call().then((value) => fetchData());
   }
 }

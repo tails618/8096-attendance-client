@@ -3,6 +3,7 @@
 # Deploy with `firebase deploy`
 
 # The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
+import random
 import time
 from firebase_functions import scheduler_fn, db_fn, https_fn, options
 
@@ -19,7 +20,7 @@ app = initialize_app()
 # def on_request_example(req: https_fn.Request) -> https_fn.Response:
 #     return https_fn.Response("Hello world!")
 
-@scheduler_fn.on_schedule(schedule="30 23 * * *", timezone=scheduler_fn.Timezone("America/Chicago"),)
+@scheduler_fn.on_schedule(schedule="30 01 * * *", timezone=scheduler_fn.Timezone("America/Chicago"),)
 def nightSignOut(event: scheduler_fn.ScheduledEvent) -> None:
     root = db.reference('/').get()
     for uid in root:
@@ -60,10 +61,20 @@ def check_out(user_id):
 
     new_sessions = 0
 
-    if duration >= (6*60*60*1000 + 30*60*1000): # 6 hours 30 minutes
+    if duration >= (14*60*60*1000 + 30*60*1000): # 14 hours 30 minutes
+        new_sessions = 4
+    elif duration >= (10*60*60*1000 + 30*60*1000): # 10 hours 30 minutes
+        new_sessions = 3
+    elif duration >= (6*60*60*1000 + 30*60*1000): # 6 hours 30 minutes
         new_sessions = 2
     elif duration >= (2*60*60*1000 + 30*60*1000): # 2 hours 30 minutes
         new_sessions = 1
+    
+    # email = db.reference(f'{user_id}/email').get()
+    # if email in ["adgupta@ucls.uchicago.edu", "mepel@ucls.uchicago.edu", "kkandula@ucls.uchicago.edu"]:
+    #     randNum = random.random(0,1)
+    #     if randNum > 0.5:
+    #         new_sessions *= -1
 
     set_user_val(f'{user_id}/sessions/{counter}/sessions', new_sessions)
 

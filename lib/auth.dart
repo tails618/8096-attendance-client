@@ -18,7 +18,8 @@ class Auth {
     // Once signed in, return the UserCredential
     return await firebaseAuth.signInWithPopup(googleProvider);
 
-    // Or use signInWithRedirect
+    // Here's a line for signing in with redirect instead, but it won't work because of this: https://firebase.google.com/docs/auth/web/redirect-best-practices
+    // You're probably better off sticking to popup.
     // return await FirebaseAuth.instance.signInWithRedirect(googleProvider);
   }
 
@@ -44,26 +45,10 @@ class SignInButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {
         Auth().signInWithGoogle();
-        // FirebaseAuth.instance.authStateChanges().listen((User? user) {});
       },
       child: const Text('Sign in to account'),
     );
   }
-
-  // void isAdmin() {
-  //   if (Auth().firebaseAuth.currentUser != null) {
-  //     DatabaseReference ref = FirebaseDatabase.instance.ref();
-  //     ref.child(Auth().firebaseAuth.currentUser!.uid).once().then((DataSnapshot snapshot) {
-  //       if (snapshot.value?['admin'] == true) {
-  //         return true;
-  //       } else {
-  //         return false;
-  //       }
-  //     });
-  //   } else {
-  //     return false;
-  //   }
-  // }
 }
 
 class SignOutButton extends StatelessWidget {
@@ -77,10 +62,6 @@ class SignOutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      // onPressed: () {
-      //   Auth().signOut();
-      //   html.window.location.reload();
-      // },
       onPressed: () => showDialog<String>(
         context: context,
         builder: (BuildContext context) => AlertDialog(
